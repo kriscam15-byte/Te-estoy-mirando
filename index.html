@@ -15,16 +15,34 @@
       display:flex; align-items:center; justify-content:center;
       overflow:hidden; position:relative;
     }
-    /* Ruido/grain sutil sobre toda la pantalla */
+
+    /* Fondo palpitante */
+    .bg{
+      position:absolute; inset:0; overflow:hidden; z-index:0;
+      filter:contrast(1.1) saturate(1.05) brightness(0.6);
+    }
+    .bg img{
+      width:110%; height:110%; object-fit:cover;
+      opacity:0.35; transform:scale(1.02);
+      animation:throb 1.4s ease-in-out infinite;
+    }
+    @keyframes throb{
+      0%{ transform:scale(1.02) }
+      50%{ transform:scale(1.06) }
+      100%{ transform:scale(1.02) }
+    }
+
+    /* Ruido sutil */
     .noise{
-      pointer-events:none; position:absolute; inset:0; opacity:.06; mix-blend-mode:screen;
+      pointer-events:none; position:absolute; inset:0; opacity:.10; mix-blend-mode:screen; z-index:1;
       background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.5"/></svg>');
       animation:grain 1.6s steps(6) infinite;
     }
     @keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-8px,6px)}50%{transform:translate(6px,-4px)}75%{transform:translate(-4px,8px)}100%{transform:translate(0,0)}}
 
-    .wrap{ text-align:center; padding:24px; width:min(920px,100%); position:relative; }
+    .wrap{ position:relative; z-index:2; text-align:center; padding:24px; width:min(920px,100%); }
 
+    /* Mensaje con glitch */
     .msg{
       font-size:clamp(28px,7vw,80px);
       line-height:1.1; font-weight:800; color:var(--accent);
@@ -32,55 +50,108 @@
       text-shadow:0 0 6px rgba(226,27,27,.35);
       user-select:none;
     }
-    /* efecto glitch RGB */
     .msg::before, .msg::after{
       content:attr(data-text); position:absolute; inset:0; overflow:hidden;
     }
-    .msg::before{ color:#2ee; transform:translate(1px,0); mix-blend-mode:screen; opacity:.35; animation:gl1 1.8s linear infinite alternate; }
-    .msg::after { color:#f2f; transform:translate(-1px,0); mix-blend-mode:screen; opacity:.28; animation:gl2 1.6s linear infinite alternate; }
-    @keyframes gl1{0%{clip-path:inset(0 0 92% 0)}20%{clip-path:inset(0 0 15% 0)}40%{clip-path:inset(0 0 60% 0)}60%{clip-path:inset(0 0 5% 0)}80%{clip-path:inset(0 0 40% 0)}100%{clip-path:inset(0 0 0 0)}}
-    @keyframes gl2{0%{clip-path:inset(90% 0 0 0)}25%{clip-path:inset(10% 0 0 0)}50%{clip-path:inset(65% 0 0 0)}75%{clip-path:inset(5% 0 0 0)}100%{clip-path:inset(0 0 0 0)}}
+    .msg::before{
+      color:#2ee; transform:translate(2px,0) skewX(2deg);
+      mix-blend-mode:screen; opacity:.55; 
+      animation:gl1 1.2s linear infinite alternate; 
+      filter:contrast(1.4) saturate(1.2);
+    }
+    .msg::after{
+      color:#f2f; transform:translate(-2px,0) skewX(-2deg);
+      mix-blend-mode:screen; opacity:.5; 
+      animation:gl2 1s linear infinite alternate;
+      filter:contrast(1.4) saturate(1.2);
+    }
+    @keyframes gl1{
+      0%{clip-path:inset(0 0 92% 0)} 
+      20%{clip-path:inset(0 0 12% 0) translateX(-2px)} 
+      50%{clip-path:inset(0 0 55% 0) translateX(3px)} 
+      80%{clip-path:inset(0 0 8% 0) translateX(-3px)} 
+      100%{clip-path:inset(0 0 0 0)}
+    }
+    @keyframes gl2{
+      0%{clip-path:inset(90% 0 0 0)}
+      25%{clip-path:inset(15% 0 0 0) translateX(2px)}
+      50%{clip-path:inset(65% 0 0 0) translateX(-3px)}
+      75%{clip-path:inset(5% 0 0 0) translateX(3px)}
+      100%{clip-path:inset(0 0 0 0)}
+    }
 
     .cursor{ display:inline-block; width:.6ch; height:1.05em; translate:0 .15em; background:var(--accent); animation:blink 1s steps(1) infinite; margin-left:.15ch; }
     @keyframes blink{50%{opacity:0}}
 
     .hint{ margin-top:1rem; color:var(--muted); font-size:.9rem; opacity:.75 }
+    .link{ margin-top:1.25rem; display:block; color:var(--fg); text-decoration:none; opacity:.9; }
+
+    /* Botón de silencio */
+    .mute{
+      position:fixed; right:12px; top:12px; z-index:3;
+      background:#14161c; color:#fff; border:1px solid #2a2d34; border-radius:10px;
+      padding:8px 12px; font-size:.9rem; opacity:.85;
+    }
   </style>
 </head>
 <body>
+  <!-- Fondo palpitante -->
+  <div class="bg"><img src="pulse.gif" alt=""></div>
   <div class="noise"></div>
+
+  <!-- Botón mute -->
+  <button class="mute" id="muteBtn">🔈 sonido</button>
+
   <div class="wrap">
     <div id="line" class="msg" data-text="Te estoy mirando">Te estoy mirando<span class="cursor"></span></div>
-    <div class="hint">Toca/clic para continuar</div>
+    <div class="hint">Toca o haz clic</div>
+    <!-- Si quieres mostrar tu link final, cámbialo aquí o déjalo como texto -->
+    <!-- <a class="link" href="https://tu-dominio" target="_blank" rel="noopener">www.teestoymirando.live</a> -->
   </div>
 
-  <!-- Tu audio ya subido al repo -->
+  <!-- Audios -->
   <audio id="staticSound" src="static.wav" preload="auto"></audio>
+  <audio id="ambient" src="ambient.wav" preload="auto" loop></audio>
 
   <script>
-    const line = document.getElementById('line');
-    const sound = document.getElementById('staticSound');
+    const line   = document.getElementById('line');
+    const staticS = document.getElementById('staticSound');
+    const amb   = document.getElementById('ambient');
+    const muteBtn = document.getElementById('muteBtn');
     const messages = ["Te estoy mirando", "Aún te estoy mirando", "Desde adentro"];
-    let i = 0;
+    let i = 0, started = false, muted = false;
 
     function setText(t){
       line.setAttribute('data-text', t);
       line.innerHTML = t + '<span class="cursor"></span>';
     }
 
-    async function clickHandler(){
-      try {
-        sound.currentTime = 0;
-        await sound.play();
-      } catch(e) { /* algunos móviles requieren interacción; ya la hubo */ }
+    async function kick(){
+      // 1) Estática breve al toque
+      try { staticS.currentTime = 0; await staticS.play(); } catch(e){}
 
+      // 2) Primer toque: arranca psicofonía en loop (móviles requieren interacción)
+      if(!started){
+        setTimeout(async ()=>{
+          try { amb.currentTime = 0; if(!muted) await amb.play(); } catch(e){}
+          started = true;
+        }, 350);
+      }
+
+      // 3) Cambia el mensaje
       i = (i + 1) % messages.length;
-      // pequeño retraso para que el audio “muerda” antes del cambio
-      setTimeout(()=> setText(messages[i]), 450);
+      setTimeout(()=> setText(messages[i]), 350);
     }
 
-    document.body.addEventListener('click', clickHandler, {passive:true});
-    document.body.addEventListener('touchstart', clickHandler, {passive:true});
+    document.body.addEventListener('click', kick, {passive:true});
+    document.body.addEventListener('touchstart', kick, {passive:true});
+
+    // Botón de silencio
+    muteBtn.addEventListener('click', async ()=>{
+      muted = !muted;
+      if(muted){ amb.pause(); muteBtn.textContent = "🔇 silenciado"; }
+      else { muteBtn.textContent = "🔈 sonido"; try{ await amb.play(); }catch(e){} }
+    });
   </script>
 </body>
 </html>
